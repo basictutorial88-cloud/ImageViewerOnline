@@ -5,36 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111111">
 <link rel="manifest" href="manifest.json">
-
-<title>Image Viewer Pro</title>
+<title>Image Viewer Pro MAX</title>
 
 <style>
 body{
     margin:0;
     font-family:Arial, sans-serif;
-    text-align:center;
-    color:white;
     background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    color:white;
 }
 
-.container{
+.app{
+    width:90%;
+    max-width:900px;
     padding:20px;
+    border-radius:20px;
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.08);
+    box-shadow:0 0 40px rgba(0,0,0,0.6);
+    text-align:center;
 }
 
 img{
     max-width:100%;
-    max-height:75vh;
-    margin-top:20px;
+    max-height:60vh;
+    margin-top:15px;
     transition: transform 0.2s ease;
-    border-radius:10px;
-    box-shadow:0 0 20px rgba(0,0,0,0.6);
+    border-radius:15px;
+    box-shadow:0 0 25px rgba(0,0,0,0.7);
 }
 
 input,button{
     padding:8px;
     margin:5px;
     border:none;
-    border-radius:6px;
+    border-radius:8px;
 }
 
 button{
@@ -47,32 +56,52 @@ button{
 button:hover{
     background:#00e0ff;
 }
+
+.drop-area{
+    margin-top:15px;
+    padding:20px;
+    border:2px dashed #aaa;
+    border-radius:15px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="app">
 
-<h2>Image Viewer Pro</h2>
+<h2>Image Viewer Pro MAX</h2>
 
-<!-- URL INPUT -->
-<input type="text" id="urlInput" placeholder="Paste image URL here">
+<!-- URL -->
+<input type="text" id="urlInput" placeholder="Paste image URL">
 <button onclick="loadURL()">Load URL</button>
 
 <br>
 
-<!-- FILE UPLOAD -->
+<!-- Upload -->
 <input type="file" id="fileInput" accept="image/*">
 
 <br>
 
-<!-- ZOOM CONTROLS -->
-<button onclick="zoom(0.1)">Zoom +</button>
-<button onclick="zoom(-0.1)">Zoom -</button>
-<button onclick="resetZoom()">Reset</button>
+<!-- Drag Drop -->
+<div class="drop-area" id="dropArea">
+Drag & Drop Image Here
+</div>
 
 <br>
+
+<!-- Controls -->
+<button onclick="zoom(0.1)">Zoom +</button>
+<button onclick="zoom(-0.1)">Zoom -</button>
+<button onclick="rotateImage()">Rotate</button>
+<button onclick="resetImage()">Reset</button>
+<button onclick="fullscreenImage()">Fullscreen</button>
+
+<br>
+
+<!-- Background -->
+<input type="file" id="bgInput" accept="image/*">
+<button onclick="removeBG()">Remove BG</button>
 
 <img id="viewer">
 
@@ -80,52 +109,96 @@ button:hover{
 
 <script>
 let scale=1;
+let rotation=0;
 const img=document.getElementById("viewer");
+const dropArea=document.getElementById("dropArea");
 
-// Load from URL
+// Load URL
 function loadURL(){
     const url=document.getElementById("urlInput").value.trim();
     if(url){
         img.src=url;
-        resetZoom();
+        resetImage();
     }
 }
 
-// Load from local file
+// File Upload
 document.getElementById("fileInput").addEventListener("change",function(){
-    const file=this.files[0];
+    loadFile(this.files[0]);
+});
+
+// Drag Drop
+dropArea.addEventListener("dragover",e=>e.preventDefault());
+dropArea.addEventListener("drop",e=>{
+    e.preventDefault();
+    const file=e.dataTransfer.files[0];
+    loadFile(file);
+});
+
+function loadFile(file){
     if(!file)return;
     const reader=new FileReader();
     reader.onload=()=>{
         img.src=reader.result;
-        resetZoom();
+        resetImage();
+    };
+    reader.readAsDataURL(file);
+}
+
+// Zoom
+function zoom(val){
+    scale+=val;
+    if(scale<0.1)scale=0.1;
+    updateTransform();
+}
+
+// Rotate
+function rotateImage(){
+    rotation+=90;
+    updateTransform();
+}
+
+function resetImage(){
+    scale=1;
+    rotation=0;
+    updateTransform();
+}
+
+function updateTransform(){
+    img.style.transform=`scale(${scale}) rotate(${rotation}deg)`;
+}
+
+// Scroll zoom
+img.addEventListener("wheel",function(e){
+    e.preventDefault();
+    if(e.deltaY<0) zoom(0.1);
+    else zoom(-0.1);
+});
+
+// Fullscreen
+function fullscreenImage(){
+    if(img.requestFullscreen){
+        img.requestFullscreen();
+    }
+}
+
+// Background Upload
+document.getElementById("bgInput").addEventListener("change",function(){
+    const file=this.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+        document.body.style.backgroundImage=`url(${reader.result})`;
+        document.body.style.backgroundSize="cover";
     };
     reader.readAsDataURL(file);
 });
 
-// Zoom buttons
-function zoom(val){
-    scale+=val;
-    if(scale<0.1) scale=0.1;
-    img.style.transform=`scale(${scale})`;
+function removeBG(){
+    document.body.style.backgroundImage="";
 }
 
-function resetZoom(){
-    scale=1;
-    img.style.transform="scale(1)";
-}
-
-// Zoom with mouse scroll
-img.addEventListener("wheel",function(e){
-    e.preventDefault();
-    if(e.deltaY<0){
-        zoom(0.1);
-    }else{
-        zoom(-0.1);
-    }
-});
-
-// Register Service Worker
+// Service Worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
 }
