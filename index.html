@@ -10,25 +10,49 @@
 
 <style>
 body{
-    background:#111;
-    color:white;
-    font-family:Arial;
+    margin:0;
+    font-family:Arial, sans-serif;
     text-align:center;
+    color:white;
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+}
+
+.container{
     padding:20px;
 }
+
 img{
     max-width:100%;
-    max-height:80vh;
-    margin-top:15px;
+    max-height:75vh;
+    margin-top:20px;
+    transition: transform 0.2s ease;
+    border-radius:10px;
+    box-shadow:0 0 20px rgba(0,0,0,0.6);
 }
-button,input{
+
+input,button{
     padding:8px;
     margin:5px;
+    border:none;
+    border-radius:6px;
+}
+
+button{
+    cursor:pointer;
+    background:#00c6ff;
+    color:black;
+    font-weight:bold;
+}
+
+button:hover{
+    background:#00e0ff;
 }
 </style>
 </head>
 
 <body>
+
+<div class="container">
 
 <h2>Image Viewer Pro</h2>
 
@@ -36,16 +60,26 @@ button,input{
 <input type="text" id="urlInput" placeholder="Paste image URL here">
 <button onclick="loadURL()">Load URL</button>
 
-<br><br>
+<br>
 
 <!-- FILE UPLOAD -->
 <input type="file" id="fileInput" accept="image/*">
 
 <br>
 
+<!-- ZOOM CONTROLS -->
+<button onclick="zoom(0.1)">Zoom +</button>
+<button onclick="zoom(-0.1)">Zoom -</button>
+<button onclick="resetZoom()">Reset</button>
+
+<br>
+
 <img id="viewer">
 
+</div>
+
 <script>
+let scale=1;
 const img=document.getElementById("viewer");
 
 // Load from URL
@@ -53,6 +87,7 @@ function loadURL(){
     const url=document.getElementById("urlInput").value.trim();
     if(url){
         img.src=url;
+        resetZoom();
     }
 }
 
@@ -63,8 +98,31 @@ document.getElementById("fileInput").addEventListener("change",function(){
     const reader=new FileReader();
     reader.onload=()=>{
         img.src=reader.result;
+        resetZoom();
     };
     reader.readAsDataURL(file);
+});
+
+// Zoom buttons
+function zoom(val){
+    scale+=val;
+    if(scale<0.1) scale=0.1;
+    img.style.transform=`scale(${scale})`;
+}
+
+function resetZoom(){
+    scale=1;
+    img.style.transform="scale(1)";
+}
+
+// Zoom with mouse scroll
+img.addEventListener("wheel",function(e){
+    e.preventDefault();
+    if(e.deltaY<0){
+        zoom(0.1);
+    }else{
+        zoom(-0.1);
+    }
 });
 
 // Register Service Worker
