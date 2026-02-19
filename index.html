@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<link rel="manifest" href="manifest.json">
+
+<title>Image Viewer Pro</title>
+
+<style>
+body{
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+    padding:20px;
+}
+img{
+    max-width:100%;
+    max-height:80vh;
+    margin-top:15px;
+}
+button,input{
+    padding:8px;
+    margin:5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Image Viewer Pro</h2>
+
+<input type="file" id="fileInput" accept="image/*">
+
+<br>
+
+<img id="viewer">
+
+<script>
+const img=document.getElementById("viewer");
+
+document.getElementById("fileInput").addEventListener("change",function(){
+    const file=this.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+        img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
